@@ -22,6 +22,8 @@ int hMIN = 0; int hMAX = 256;
 int sMIN = 0; int sMAX = 256;
 int vMIN = 0; int vMAX = 256;
 
+bool ctrlCPressed = false;
+
 void trackIt (int, void*)
 {
     
@@ -40,12 +42,14 @@ void createTrackBars()
     createTrackbar("trackVMAX", trackers, &vMAX, hMAX, trackIt);
 }
 
-void sig_handler(int sig);
+void sig_handler (int sig)
+{
+    write (0,"\nCtrl C pressed in signal handler", sig);
+    ctrlCPressed = true;
+}
 
 int main(int argc, const char * argv[])
 {
-    bool ctrlCPressed = false;
-    
     struct sigaction sig_struct;
     sig_struct.sa_handler = sig_handler;
     sig_struct.sa_flags = 0;
@@ -63,11 +67,7 @@ int main(int argc, const char * argv[])
     createTrackBars();
     while (true)
     {
-        if (ctrlCPressed)
-        {
-            cout << "Quitting" << endl;
-            exit(0);
-        }
+        
         track.displayCameraFeed();
         track.giveValues(hMIN, hMAX, sMIN, sMAX, vMIN, vMAX);
         track.imageToBinary();
@@ -77,6 +77,11 @@ int main(int argc, const char * argv[])
         controller.CoOrdinateToDistance(track.getX(), track.getY());
         
         waitKey(33);
+        if (ctrlCPressed)
+        {
+            cout << "Quitting" << endl;
+            break;
+        }
     }
     return 0;
 }
